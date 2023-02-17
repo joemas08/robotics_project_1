@@ -2,12 +2,11 @@ import easysensors
 from easygopigo3 import EasyGoPiGo3
 import time
 
-size_1,size_2 = 0
+
 gp3_obj = EasyGoPiGo3()
 ultrasonic_sensor_1 = gp3_obj.init_ultrasonic_sensor()
 distance_inches_sensor_1 = 0.0
 distance_threshold = 6.0
-turn = 0
 
 def turn_bot():
   gp3_obj.drive_inches(3)
@@ -16,27 +15,24 @@ def turn_bot():
   time.sleep(2.35)
   gp3_obj.stop()
   gp3_obj.drive_inches(3)
-  turn += 1
 
-def measure_side(side):
-  gp3_obj.forward()
-  side += 2.54
-  return side
 
 def cm_to_inch(side):
     inch = side/2.54
     return inch
 
-def print_results():
+def print_results(a, b):
   print(f"Voltage: {gp3_obj.volt()}")
   print("~" * 50 + "\n")
   print("~ Right Sensor ~\n")
-  print(f"Distance from object (inches): {distance_inches_sensor_1}. Stop past: {distance_threshold} inches.")
+  print(f"Distance from object (inches): {ultrasonic_sensor_1.read_inches()}.")
   print("~" * 50 + "\n")
-  print(f"Total Side 1 measured: {size_1}\n centimeters. ({cm_to_inch(size_1)} inches.)")
-  print(f"Total Side 2 measured: {size_2}\n centimeters. ({cm_to_inch(size_2)} inches.)")
-  
+  print(f"Total Side 1 measured: {a}\n centimeters. ({cm_to_inch(a)} inches.)")
+  print(f"Total Side 2 measured: {b}\n centimeters. ({cm_to_inch(b)} inches.)")
+
 def get_measure():
+  turn = 0
+  size_1, size_2 = 0.0, 0.0
   for i in range(100):
     gp3_obj.set_speed(200)
     distance_inches_sensor_1 = ultrasonic_sensor_1.read_inches()
@@ -45,13 +41,15 @@ def get_measure():
       break
     elif distance_inches_sensor_1 < distance_threshold and turn == 0:
       gp3_obj.forward()
-      measure_side(size_1)
+      size_1 += 2.54
     elif distance_inches_sensor_1 < distance_threshold and turn == 1:
-      measure_side(size_2)
+      gp3_obj.forward()
+      size_2 += 2.54
     else:
       turn_bot()
+      turn += 1
       continue
-    print_results()
+    print_results(size_1, size_2)
     time.sleep(0.225)
 
 get_measure()
